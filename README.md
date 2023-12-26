@@ -1,5 +1,5 @@
 # kibana-visualize-sankey
-a sankey diagram use kibana vega，and data source from suricata
+a sankey diagram use kibana vega，and data source from suricata \n
 因为官方只有2node的例子，3node以上正确运行的例子似乎并不多
 
 
@@ -10,6 +10,8 @@ a sankey diagram use kibana vega，and data source from suricata
 
 ## 数据
 来源于suricata，并通过filebeat module suricata格式化后写入elasticsearch
+也适用于其他场景
+
 
 ## 兼容性
 仅在kibana 7.17.15测试
