@@ -1,5 +1,5 @@
 # kibana-visualize-sankey
-a sankey diagram use kibana vega，and data source from suricata
+a 4 node sankey diagram use kibana vega，and data source from suricata
 
 
 因为官方只有2node的例子，3node以上正确运行的例子似乎并不多
