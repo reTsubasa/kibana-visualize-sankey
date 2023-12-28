@@ -1,5 +1,5 @@
 {
-  "$schema": "https://vega.github.io/schema/vega/v3.0.json",
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
   "data": [
     {
       "name": "rawData",
@@ -34,16 +34,14 @@
       ]
     },
     {
-      "name": "nodes",
+      "name": "nodes1",
       "source": "rawData",
       "transform": [
         {
           "type": "filter",
           "expr": "!groupSelector || groupSelector.stk0 == datum.stk0 || groupSelector.stk1 == datum.stk1 || groupSelector.stk2 == datum.stk2 || groupSelector.stk3 == datum.stk3"
         },
-        {"type": "formula", "expr": "datum.stk0+datum.stk1", "as": "key0"},
-        {"type": "formula", "expr": "datum.stk1+datum.stk2", "as": "key1"},
-        {"type": "formula", "expr": "datum.stk2+datum.stk3", "as": "key2"},
+        {"type": "formula", "expr": "datum.stk0+datum.stk1+datum.stk2+datum.stk3", "as": "key"},
         {
           "type": "fold",
           "fields": ["stk0","stk1", "stk2", "stk3"],
@@ -51,7 +49,7 @@
         },
         {
           "type": "formula",
-          "expr": "datum.stack == 'stk0' ? datum.stk0+' '+datum.stk1+' '+datum.stk2+' '+datum.stk3 : datum.stk3+' '+datum.stk2+' '+datum.stk1+' '+datum.stk1",
+          "expr": "datum.stack == 'stk0' ? datum.stk0+' '+datum.stk1 : datum.stk1+' '+datum.stk0",
           "as": "sortField"
         },
         {
@@ -64,8 +62,64 @@
       ]
     },
     {
-      "name": "groups",
-      "source": "nodes",
+      "name": "nodes2",
+      "source": "rawData",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "!groupSelector || groupSelector.stk0 == datum.stk0 || groupSelector.stk1 == datum.stk1 || groupSelector.stk2 == datum.stk2 || groupSelector.stk3 == datum.stk3"
+        },
+        {"type": "formula", "expr": "datum.stk0+datum.stk1+datum.stk2+datum.stk3", "as": "key"},
+        {
+          "type": "fold",
+          "fields": ["stk0","stk1", "stk2", "stk3"],
+          "as": ["stack", "grpId"]
+        },
+        {
+          "type": "formula",
+          "expr": "datum.stack == 'stk1' ? datum.stk1+' '+datum.stk2: datum.stk2+' '+datum.stk1",
+          "as": "sortField"
+        },
+        {
+          "type": "stack",
+          "groupby": ["stack"],
+          "sort": {"field": "sortField", "order": "descending"},
+          "field": "size"
+        },
+        {"type": "formula", "expr": "(datum.y0+datum.y1)/2", "as": "yc"}
+      ]
+    },
+    {
+      "name": "nodes3",
+      "source": "rawData",
+      "transform": [
+        {
+          "type": "filter",
+          "expr": "!groupSelector || groupSelector.stk0 == datum.stk0 || groupSelector.stk1 == datum.stk1 || groupSelector.stk2 == datum.stk2 || groupSelector.stk3 == datum.stk3"
+        },
+        {"type": "formula", "expr": "datum.stk0+datum.stk1+datum.stk2+datum.stk3", "as": "key"},
+        {
+          "type": "fold",
+          "fields": ["stk0","stk1", "stk2", "stk3"],
+          "as": ["stack", "grpId"]
+        },
+        {
+          "type": "formula",
+          "expr": "datum.stack == 'stk2' ? datum.stk2+' '+datum.stk3: datum.stk3+' '+datum.stk2",
+          "as": "sortField"
+        },
+        {
+          "type": "stack",
+          "groupby": ["stack"],
+          "sort": {"field": "sortField", "order": "descending"},
+          "field": "size"
+        },
+        {"type": "formula", "expr": "(datum.y0+datum.y1)/2", "as": "yc"}
+      ]
+    },
+    {
+      "name": "groups1",
+      "source": "nodes1",
       "transform": [
         {
           "type": "aggregate",
@@ -84,7 +138,69 @@
         {"type": "formula", "expr": "scale('y', datum.y1)", "as": "scaledY1"},
         {
           "type": "formula",
-          "expr": "datum.stack == 'stk3'",
+          "expr": "datum.stack == 'stk0'",
+          "as": "rightLabel"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.total/domain('y')[1]",
+          "as": "percentage"
+        }
+      ]
+    },
+    {
+      "name": "groups2",
+      "source": "nodes2",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": ["stack", "grpId"],
+          "fields": ["size"],
+          "ops": ["sum"],
+          "as": ["total"]
+        },
+        {
+          "type": "stack",
+          "groupby": ["stack"],
+          "sort": {"field": "grpId", "order": "descending"},
+          "field": "total"
+        },
+        {"type": "formula", "expr": "scale('y', datum.y0)", "as": "scaledY0"},
+        {"type": "formula", "expr": "scale('y', datum.y1)", "as": "scaledY1"},
+        {
+          "type": "formula",
+          "expr": "datum.stack == 'stk1'",
+          "as": "rightLabel"
+        },
+        {
+          "type": "formula",
+          "expr": "datum.total/domain('y')[1]",
+          "as": "percentage"
+        }
+      ]
+    },
+    {
+      "name": "groups3",
+      "source": "nodes3",
+      "transform": [
+        {
+          "type": "aggregate",
+          "groupby": ["stack", "grpId"],
+          "fields": ["size"],
+          "ops": ["sum"],
+          "as": ["total"]
+        },
+        {
+          "type": "stack",
+          "groupby": ["stack"],
+          "sort": {"field": "grpId", "order": "descending"},
+          "field": "total"
+        },
+        {"type": "formula", "expr": "scale('y', datum.y0)", "as": "scaledY0"},
+        {"type": "formula", "expr": "scale('y', datum.y1)", "as": "scaledY1"},
+        {
+          "type": "formula",
+          "expr": "datum.stack == 'stk2'",
           "as": "rightLabel"
         },
         {
@@ -96,29 +212,29 @@
     },
     {
       "name": "destinationNodes1",
-      "source": "nodes",
+      "source": "nodes1",
       "transform": [{"type": "filter", "expr": "datum.stack == 'stk1'"}]
     },
     {
       "name": "destinationNodes2",
-      "source": "nodes",
+      "source": "nodes2",
       "transform": [{"type": "filter", "expr": "datum.stack == 'stk2'"}]
     },
     {
       "name": "destinationNodes3",
-      "source": "nodes",
+      "source": "nodes3",
       "transform": [{"type": "filter", "expr": "datum.stack == 'stk3'"}]
     },
     {
-      "name": "edges0",
-      "source": "nodes",
+      "name": "edges1",
+      "source": "nodes1",
       "transform": [
         {"type": "filter", "expr": "datum.stack == 'stk0'"},
         {
           "type": "lookup",
           "from": "destinationNodes1",
-          "key": "key0",
-          "fields": ["key0"],
+          "key": "key",
+          "fields": ["key"],
           "as": ["target"]
         },
         {
@@ -143,15 +259,15 @@
       ]
     },
     {
-      "name": "edges1",
-      "source": "nodes",
+      "name": "edges2",
+      "source": "nodes2",
       "transform": [
         {"type": "filter", "expr": "datum.stack == 'stk1'"},
         {
           "type": "lookup",
           "from": "destinationNodes2",
-          "key": "key1",
-          "fields": ["key1"],
+          "key": "key",
+          "fields": ["key"],
           "as": ["target"]
         },
         {
@@ -176,15 +292,15 @@
       ]
     },
     {
-      "name": "edges2",
-      "source": "nodes",
+      "name": "edges3",
+      "source": "nodes3",
       "transform": [
         {"type": "filter", "expr": "datum.stack == 'stk2'"},
         {
           "type": "lookup",
           "from": "destinationNodes3",
-          "key": "key2",
-          "fields": ["key2"],
+          "key": "key",
+          "fields": ["key"],
           "as": ["target"]
         },
         {
@@ -222,13 +338,13 @@
       "name": "y",
       "type": "linear",
       "range": "height",
-      "domain": {"data": "nodes", "field": "y1"}
+      "domain": {"data": "nodes1", "field": "y1"}
     },
     {
       "name": "color",
       "type": "ordinal",
       "range": "category",
-      "domain": {"data": "rawData", "field": "stk3"}
+      "domain": {"data": "rawData", "fields": ["stk0","stk1", "stk2", "stk3"]}
     },
     {
       "name": "stackNames",
@@ -252,36 +368,6 @@
   "marks": [
     {
       "type": "path",
-      "name": "edgeMark0",
-      "from": {"data": "edges0"},
-      "clip": true,
-      "encode": {
-        "update": {
-          "stroke": [
-            {
-              "test": "groupSelector && groupSelector.stack=='stk0'",
-              "scale": "color",
-              "field": "stk1"
-            },
-            {"scale": "color", "field": "stk0"}
-          ],
-          "strokeWidth": {"field": "strokeWidth"},
-          "path": {"field": "path"},
-          "strokeOpacity": {
-            "signal": "!groupSelector && (groupHover.stk0 == datum.stk0 ||groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 0.9 : 0.3"
-          },
-          "zindex": {
-            "signal": "!groupSelector && (groupHover.stk0 == datum.stk0 || groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 1 : 0"
-          },
-          "tooltip": {
-            "signal": "datum.stk0 + ' → ' + datum.stk1 + ' → ' + datum.stk2 + '    ' + format(datum.size, ',.0f') + '   (' + format(datum.percentage, '.1%') + ')'"
-          }
-        },
-        "hover": {"strokeOpacity": {"value": 1}}
-      }
-    },
-    {
-      "type": "path",
       "name": "edgeMark1",
       "from": {"data": "edges1"},
       "clip": true,
@@ -289,22 +375,22 @@
         "update": {
           "stroke": [
             {
-              "test": "groupSelector && groupSelector.stack=='stk1'",
+              "test": "groupSelector && groupSelector.stack=='stk0'",
               "scale": "color",
-              "field": "stk2"
+              "field": "stk0"
             },
-            {"scale": "color", "field": "stk1"}
+            {"scale": "color", "field": "stk0"}
           ],
           "strokeWidth": {"field": "strokeWidth"},
           "path": {"field": "path"},
           "strokeOpacity": {
-            "signal": "!groupSelector && (groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 0.9 : 0.3"
+            "signal": "!groupSelector && (groupHover.stk0 == datum.stk0 ||groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 0.9 : 0.2"
           },
           "zindex": {
-            "signal": "!groupSelector && (groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 1 : 0"
+            "signal": "!groupSelector && (groupHover.stk0 == datum.stk0 || groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 1 : 0"
           },
           "tooltip": {
-            "signal": "datum.stk1 + ' → ' + datum.stk2 + '    ' + format(datum.size, ',.0f') + '   (' + format(datum.percentage, '.1%') + ')'"
+            "signal": "datum.stk0 + ' → ' + datum.stk1 + ' → ' + datum.stk2 + ' → ' + datum.stk3 +'    ' + format(datum.size, ',.0f') + '   (' + format(datum.percentage, '.1%') + ')'"
           }
         },
         "hover": {"strokeOpacity": {"value": 1}}
@@ -319,22 +405,52 @@
         "update": {
           "stroke": [
             {
-              "test": "groupSelector && groupSelector.stack=='stk2'",
+              "test": "groupSelector && groupSelector.stack=='stk1'",
               "scale": "color",
-              "field": "stk3"
+              "field": "stk1"
             },
-            {"scale": "color", "field": "stk3"}
+            {"scale": "color", "field": "stk1"}
           ],
           "strokeWidth": {"field": "strokeWidth"},
           "path": {"field": "path"},
           "strokeOpacity": {
-            "signal": "!groupSelector && (groupHover.stk2 == datum.stk2 || groupHover.stk3 == datum.stk3) ? 0.9 : 0.3"
+            "signal": "!groupSelector && (groupHover.stk0 == datum.stk0 ||groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 0.9 : 0.2"
           },
           "zindex": {
-            "signal": "!groupSelector && (groupHover.stk2 == datum.stk2 || groupHover.stk3 == datum.stk3) ? 1 : 0"
+            "signal": "!groupSelector && (groupHover.stk0 == datum.stk0 ||groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 1 : 0"
           },
           "tooltip": {
-            "signal": "datum.stk2 + ' → ' + datum.stk3 + '    ' + format(datum.size, ',.0f') + '   (' + format(datum.percentage, '.1%') + ')'"
+            "signal": "datum.stk0 + ' → ' + datum.stk1 + ' → ' + datum.stk2 + ' → ' + datum.stk3 +'    ' + format(datum.size, ',.0f') + '   (' + format(datum.percentage, '.1%') + ')'"
+          }
+        },
+        "hover": {"strokeOpacity": {"value": 1}}
+      }
+    },
+    {
+      "type": "path",
+      "name": "edgeMark3",
+      "from": {"data": "edges3"},
+      "clip": true,
+      "encode": {
+        "update": {
+          "stroke": [
+            {
+              "test": "groupSelector && groupSelector.stack=='stk2'",
+              "scale": "color",
+              "field": "stk2"
+            },
+            {"scale": "color", "field": "stk2"}
+          ],
+          "strokeWidth": {"field": "strokeWidth"},
+          "path": {"field": "path"},
+          "strokeOpacity": {
+            "signal": "!groupSelector && (groupHover.stk0 == datum.stk0 ||groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 0.9 : 0.2"
+          },
+          "zindex": {
+            "signal": "!groupSelector && (groupHover.stk0 == datum.stk0 ||groupHover.stk1 == datum.stk1 || groupHover.stk2 == datum.stk2|| groupHover.stk3 == datum.stk3) ? 1 : 0"
+          },
+          "tooltip": {
+            "signal": "datum.stk0 + ' → ' + datum.stk1 + ' → ' + datum.stk2 + ' → ' + datum.stk3 +'    ' + format(datum.size, ',.0f') + '   (' + format(datum.percentage, '.1%') + ')'"
           }
         },
         "hover": {"strokeOpacity": {"value": 1}}
@@ -343,7 +459,7 @@
     {
       "type": "rect",
       "name": "groupMark",
-      "from": {"data": "groups"},
+      "from": {"data": "groups1"},
       "encode": {
         "enter": {
           "fill": {"scale": "color", "field": "grpId"},
@@ -363,7 +479,7 @@
     },
     {
       "type": "text",
-      "from": {"data": "groups"},
+      "from": {"data": "groups1"},
       "interactive": false,
       "encode": {
         "update": {
